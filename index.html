@@ -278,6 +278,20 @@ h1{font-size:34px;font-weight:700;line-height:1.2;margin-bottom:6px;background:l
 
 <!-- TAB: TOEFL -->
 <div class="tab-content" id="tab-toefl">
+
+  <!-- Daily lessons checklist (13/day) -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+    <div style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;">دروس اليوم — ١٣ درس</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <button onclick="tChangeDay(-1)" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:15px;">›</button>
+      <span id="tDateLabel" style="font-size:13px;font-weight:600;min-width:150px;text-align:center;">—</span>
+      <button onclick="tChangeDay(1)" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:15px;">‹</button>
+      <button onclick="tGoToday()" style="background:var(--teal-dim);border:1px solid rgba(0,212,170,0.3);color:var(--teal);padding:5px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;">اليوم</button>
+    </div>
+  </div>
+
+  <div id="tLessonsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px;margin-bottom:28px;"></div>
+
   <div class="section-title">أقسام الكورس</div>
 
   <div class="phase phase-1 open">
@@ -628,7 +642,7 @@ const QUDRA_EXAM = new Date(2026,7,12);
 const QUOTES = [
   {t:"كل درس تنهيه اليوم هو خطوة نحو Mayo Clinic.",s:"ابدأ الآن — لا غداً."},
   {t:"الدكتور الكبير يُبنى من الانضباط اليومي، لا من اللحظات الاستثنائية.",s:"١٣ درس فقط — هذا كل ما يُطلب منك اليوم."},
-  {t:"وَما نَيلُ المَطالِبِ بِالتَمَنّي.",s:"Harvard MD ليس حلماً — هو خطة."},
+  {t:"من يريد شيئاً نادراً يجب أن يصنع شيئاً نادراً.",s:"Harvard MD ليس حلماً — هو خطة."},
   {t:"الإرهاق مؤقت. البورد الأمريكي دائم.",s:"استمر."},
   {t:"الفرق بين من يصل ومن لا يصل: من لم يتوقف.",s:"اليوم يضاف إلى سجلك."},
   {t:"المنافسون يستريحون. أنت تبني.",s:"هذا هو التفاوت الذي تصنعه."},
@@ -668,7 +682,7 @@ const MILESTONES_DATA = [
 // ══════════════════════════════════
 // STORAGE — local-first + Firebase cloud sync
 // ══════════════════════════════════
-const SYNC_KEYS = ['td2','ql2','vb2','todo2','qf2','mdt2','gal2'];
+const SYNC_KEYS = ['td2','ql2','vb2','todo2','qf2','mdt2','gal2','tdl2'];
 let cloudReady = false;
 
 // ---- Firebase init ----
@@ -748,6 +762,7 @@ function rehydrateState(){
   qDoneFaces = load('qf2', {});
   medDoneTerms = load('mdt2', {});
   galleryEntries = load('gal2', []);
+  tDoneLessons = load('tdl2', {});
 }
 
 function refreshAllViews(){
@@ -759,6 +774,7 @@ function refreshAllViews(){
   renderQuran();
   renderMed();
   renderGallery();
+  renderTLessons();
 }
 
 let toeflDone = load('td2',0);       // lessons done
@@ -891,17 +907,38 @@ function renderTodo(){
   const done=load('todo2',{})[dk]||[];
 
   tasks.forEach((task,i)=>{
-    const isDone=done.includes(i);
+    let isDone=done.includes(i);
+    // for TOEFL, reflect the real per-lesson state instead of the stale todo2 flag
+    if(task.type==='toefl'){
+      const dayOffset = daysBetween(START, date);
+      const lessons = tGetDayLessons(dayOffset);
+      isDone = lessons.length>0 && lessons.every(li => !!tDoneLessons[li]);
+    }
     const item=document.createElement('div');
     item.className='todo-item'+(isDone?' checked':'');
     item.innerHTML=`<div class="todo-check">${isDone?'✓':''}</div><div class="todo-text">${task.text}</div><span class="todo-badge ${task.badge}">${badgeLabel(task.type)}</span>`;
     item.onclick=()=>{
+      const wasChecked = isDone; // use the same state we just displayed
       const all=load('todo2',{});
       const d=all[dk]||[];
       const idx=d.indexOf(i);
-      if(idx>-1) d.splice(idx,1); else d.push(i);
+      if(wasChecked){ if(idx>-1) d.splice(idx,1); }
+      else { if(idx===-1) d.push(i); }
       all[dk]=d;
       save('todo2',all);
+
+      // keep the per-lesson TOEFL tracker (tdl2) in sync with this daily checkbox
+      if(task.type==='toefl'){
+        const dayOffset = daysBetween(START, date);
+        const lessons = tGetDayLessons(dayOffset);
+        lessons.forEach(li => {
+          if(wasChecked) delete tDoneLessons[li];
+          else tDoneLessons[li] = true;
+        });
+        save('tdl2', tDoneLessons);
+        tRecalcToeflDone();
+      }
+
       renderTodo();
       updateProgress();
     };
@@ -1097,6 +1134,69 @@ function qGetDayFaces(dayOffset){
   for(let i = start; i < end && i < 604; i++) faces.push(i);
   return faces;
 }
+
+// ══════════════════════════════════
+// TOEFL — دروس اليوم (١٣ درس/يوم)
+// ══════════════════════════════════
+let tViewDay = 0;
+let tDoneLessons = load('tdl2', {}); // {lessonIndex: true} — individual per-lesson tracking
+
+function tGetDayLessons(dayOffset){
+  // 13 lessons/day starting from lesson 0
+  const start = dayOffset * 13;
+  const end   = start + 13;
+  const lessons = [];
+  for(let i = start; i < end && i < 1156; i++) lessons.push(i);
+  return lessons;
+}
+
+function tRecalcToeflDone(){
+  // toeflDone = count of individually-checked lessons (keeps phase bars + top box in sync)
+  toeflDone = Object.keys(tDoneLessons).filter(k => tDoneLessons[k]).length;
+  save('td2', toeflDone);
+}
+
+function renderTLessons(){
+  const today    = new Date();
+  const viewDate = addDays(today, tViewDay);
+  const doff     = daysBetween(START, viewDate);
+
+  const dLbl = document.getElementById('tDateLabel');
+  if(dLbl) dLbl.textContent = fmtDate(viewDate);
+
+  const list = document.getElementById('tLessonsList');
+  if(!list) return;
+  list.innerHTML = '';
+
+  if(doff < 0 || doff >= 120){
+    list.innerHTML = '<div style="color:var(--muted);font-size:13px;grid-column:1/-1;padding:20px;text-align:center;">خارج نطاق الخطة</div>';
+    return;
+  }
+
+  const lessons = tGetDayLessons(doff);
+  lessons.forEach(li => {
+    const done = !!tDoneLessons[li];
+    const el = document.createElement('div');
+    el.style.cssText = `background:${done?'var(--teal-dim)':'var(--bg2)'};border:1px solid ${done?'rgba(0,212,170,0.35)':'var(--border)'};border-radius:10px;padding:10px 6px;text-align:center;cursor:pointer;transition:all 0.2s;`;
+    el.innerHTML = `
+      <div style="font-size:15px;font-weight:700;color:${done?'var(--teal)':'var(--muted)'};">${toAr(li+1)}</div>
+      <div style="font-size:9px;color:${done?'var(--teal)':'var(--muted)'};margin-top:2px;">درس</div>
+      ${done?'<div style="color:var(--teal);font-size:13px;margin-top:3px;">✓</div>':''}
+    `;
+    el.onclick = () => {
+      if(tDoneLessons[li]) delete tDoneLessons[li];
+      else tDoneLessons[li] = true;
+      save('tdl2', tDoneLessons);
+      tRecalcToeflDone();
+      renderTLessons();
+      updateProgress();
+    };
+    list.appendChild(el);
+  });
+}
+
+function tChangeDay(d){ tViewDay += d; renderTLessons(); }
+function tGoToday(){ tViewDay = 0; renderTLessons(); }
 
 function renderQuran(){
   const today    = new Date();
@@ -1619,9 +1719,16 @@ function catchUpAll(){
       // mark all task indices as done
       all[dk] = tasks.map((_,i) => i);
     }
+    // mark all of this day's individual TOEFL lessons as done too
+    const lessons = tGetDayLessons(d);
+    lessons.forEach(li => { tDoneLessons[li] = true; });
   }
   save('todo2', all);
+  save('tdl2', tDoneLessons);
+  tRecalcToeflDone();
+
   renderTodo();
+  renderTLessons();
   updateProgress();
   const n = daysElapsed;
   alert(`✓ تم تعليم ${n} يوم ماضٍ كمنجز`);
@@ -1651,6 +1758,7 @@ function showTabById(id){
   document.getElementById('tab-'+id).classList.add('active');
   const btn = [...document.querySelectorAll('.tab-btn')].find(b=>b.getAttribute('onclick')===`showTab('${id}')`);
   if(btn) btn.classList.add('active');
+  if(id==='toefl') renderTLessons();
   if(id==='quran') renderQuran();
   if(id==='med') renderMed();
   if(id==='gallery') renderGallery();
@@ -1661,6 +1769,7 @@ function showTab(id){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
   event.target.classList.add('active');
+  if(id==='toefl') renderTLessons();
   if(id==='quran') renderQuran();
   if(id==='med') renderMed();
   if(id==='gallery') renderGallery();
@@ -1683,6 +1792,7 @@ function initApp(){
   renderQuran();
   renderMed();
   renderGallery();
+  renderTLessons();
 
   // pull any cloud state (from other devices) after first paint
   syncFromCloud();
