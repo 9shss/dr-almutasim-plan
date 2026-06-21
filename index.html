@@ -1397,6 +1397,7 @@ function openGalleryUpload(){
   document.getElementById('galleryStoryInput').value = '';
   document.getElementById('galleryPreviewImg').style.display = 'none';
   document.getElementById('galleryPreviewPlaceholder').style.display = 'block';
+  document.getElementById('gallerySizeWarning').style.display = 'none';
   pendingImageData = null;
 }
 
@@ -1411,32 +1412,77 @@ function handleGalleryFileSelect(event){
   if(!file) return;
 
   const warnEl = document.getElementById('gallerySizeWarning');
+
+  // HEIC/HEIF (iPhone default format) can't be decoded by <img> in most browsers
+  const isHeic = /heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name);
+  if(isHeic){
+    warnEl.textContent = '⚠️ صيغة HEIC غير مدعومة — غيّر إعدادات الكاميرا لـ "Most Compatible" (JPEG) من إعدادات الآيفون، أو اختر صورة JPEG/PNG.';
+    warnEl.style.color = 'var(--coral)';
+    warnEl.style.display = 'block';
+    event.target.value = '';
+    return;
+  }
+
+  warnEl.textContent = 'الصورة كبيرة — جاري الضغط تلقائياً...';
+  warnEl.style.color = 'var(--coral)';
   warnEl.style.display = 'block';
 
+  // safety timeout: if compression hasn't finished in 8s, something went wrong
+  let finished = false;
+  const safetyTimer = setTimeout(() => {
+    if(!finished){
+      warnEl.textContent = '⚠️ تعذّر تحميل الصورة. جرّب صورة أخرى (JPEG أو PNG).';
+      warnEl.style.display = 'block';
+    }
+  }, 8000);
+
   const reader = new FileReader();
+  reader.onerror = function(){
+    finished = true;
+    clearTimeout(safetyTimer);
+    warnEl.textContent = '⚠️ فشل قراءة الملف. جرّب صورة أخرى.';
+    warnEl.style.display = 'block';
+  };
   reader.onload = function(e){
     const img = new Image();
+    img.onerror = function(){
+      finished = true;
+      clearTimeout(safetyTimer);
+      warnEl.textContent = '⚠️ هذا الملف ليس صورة مدعومة. جرّب JPEG أو PNG.';
+      warnEl.style.display = 'block';
+    };
     img.onload = function(){
-      // compress: max 700px on longest side, JPEG quality 0.7
-      const maxDim = 700;
-      let w = img.width, h = img.height;
-      if(w > h && w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; }
-      else if(h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; }
+      try{
+        // compress: max 700px on longest side, JPEG quality 0.7
+        const maxDim = 700;
+        let w = img.width, h = img.height;
+        if(w > h && w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; }
+        else if(h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; }
 
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, w, h);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
 
-      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
-      pendingImageData = compressedBase64;
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+        pendingImageData = compressedBase64;
 
-      // preview
-      const previewImg = document.getElementById('galleryPreviewImg');
-      previewImg.src = compressedBase64;
-      previewImg.style.display = 'block';
-      document.getElementById('galleryPreviewPlaceholder').style.display = 'none';
-      warnEl.style.display = 'none';
+        // preview
+        const previewImg = document.getElementById('galleryPreviewImg');
+        previewImg.src = compressedBase64;
+        previewImg.style.display = 'block';
+        document.getElementById('galleryPreviewPlaceholder').style.display = 'none';
+
+        finished = true;
+        clearTimeout(safetyTimer);
+        warnEl.style.display = 'none';
+      }catch(err){
+        finished = true;
+        clearTimeout(safetyTimer);
+        warnEl.textContent = '⚠️ حدث خطأ أثناء معالجة الصورة. جرّب صورة أخرى.';
+        warnEl.style.display = 'block';
+        console.error('Gallery compress error:', err);
+      }
     };
     img.src = e.target.result;
   };
