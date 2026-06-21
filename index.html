@@ -250,6 +250,7 @@ h1{font-size:34px;font-weight:700;line-height:1.2;margin-bottom:6px;background:l
   <button class="tab-btn" onclick="showTab('qudra')">🔢 القدرات</button>
   <button class="tab-btn" onclick="showTab('quran')">📖 القرآن</button>
   <button class="tab-btn" onclick="showTab('med')">🏥 Medical Terms</button>
+  <button class="tab-btn" onclick="showTab('gallery')">📸 إنجازاتي</button>
   <button class="tab-btn" onclick="showTab('milestones')">🏁 المعالم</button>
 </div>
 
@@ -529,6 +530,56 @@ h1{font-size:34px;font-weight:700;line-height:1.2;margin-bottom:6px;background:l
 
 </div>
 
+<!-- TAB: GALLERY (إنجازاتي) -->
+<div class="tab-content" id="tab-gallery">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+    <div>
+      <div style="font-size:11px;color:#e8a87c;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;margin-bottom:4px;">صور الإنجاز</div>
+      <div style="font-size:22px;font-weight:700;">إنجازاتي</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px;">لحظات تذكارية مربوطة بتاريخها — لكل صورة قصة</div>
+    </div>
+    <button onclick="openGalleryUpload()" style="background:rgba(232,168,124,0.15);border:1px solid rgba(232,168,124,0.3);color:#e8a87c;padding:11px 20px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;display:flex;align-items:center;gap:6px;">
+      <span style="font-size:16px;">+</span> أضف لحظة جديدة
+    </button>
+  </div>
+
+  <!-- Upload form (hidden until "+" clicked) -->
+  <div id="galleryUploadForm" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:24px;">
+    <div style="display:grid;grid-template-columns:140px 1fr;gap:16px;align-items:start;">
+      <div>
+        <label for="galleryFileInput" style="display:block;width:140px;height:140px;border-radius:12px;border:2px dashed var(--border2);background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
+          <span id="galleryPreviewPlaceholder" style="font-size:28px;color:var(--muted);">📷</span>
+          <img id="galleryPreviewImg" style="display:none;width:100%;height:100%;object-fit:cover;" />
+        </label>
+        <input type="file" id="galleryFileInput" accept="image/*" style="display:none;" onchange="handleGalleryFileSelect(event)">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">تاريخ اللحظة</div>
+          <input type="date" id="galleryDateInput" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:inherit;font-size:13px;box-sizing:border-box;">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">قصة هذي اللحظة</div>
+          <textarea id="galleryStoryInput" placeholder="اليوم أكملت إنجازي وأخذت صورة تذكارية..." style="width:100%;min-height:70px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:inherit;font-size:13px;resize:vertical;box-sizing:border-box;"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="saveGalleryEntry()" style="background:rgba(232,168,124,0.18);border:1px solid rgba(232,168,124,0.35);color:#e8a87c;padding:9px 18px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;">حفظ اللحظة</button>
+          <button onclick="closeGalleryUpload()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);padding:9px 18px;border-radius:8px;cursor:pointer;font-size:13px;font-family:inherit;">إلغاء</button>
+        </div>
+        <div id="gallerySizeWarning" style="display:none;font-size:11px;color:var(--coral);">الصورة كبيرة — جاري الضغط تلقائياً...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Locket-style gallery grid -->
+  <div id="galleryGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;"></div>
+  <div id="galleryEmpty" style="text-align:center;padding:60px 20px;color:var(--muted);font-size:13px;display:none;">
+    لسه ما أضفت أي لحظة. اضغط "أضف لحظة جديدة" وابدأ توثيق رحلتك 📸
+  </div>
+
+</div>
+
 <!-- TAB: MILESTONES -->
 <div class="tab-content" id="tab-milestones">
   <div class="section-title">المعالم الزمنية</div>
@@ -541,7 +592,7 @@ h1{font-size:34px;font-weight:700;line-height:1.2;margin-bottom:6px;background:l
 // ══════════════════════════════════
 // LOCK SCREEN — simple password gate
 // ══════════════════════════════════
-const APP_PASSWORD = '11223344'; // غيّرها لكلمة مرور من اختيارك
+const APP_PASSWORD = 'Op875421'; // غيّرها لكلمة مرور من اختيارك
 
 function tryUnlock(){
   const val = document.getElementById('lockInput').value;
@@ -617,7 +668,7 @@ const MILESTONES_DATA = [
 // ══════════════════════════════════
 // STORAGE — local-first + Firebase cloud sync
 // ══════════════════════════════════
-const SYNC_KEYS = ['td2','ql2','vb2','todo2','qf2','mdt2'];
+const SYNC_KEYS = ['td2','ql2','vb2','todo2','qf2','mdt2','gal2'];
 let cloudReady = false;
 
 // ---- Firebase init ----
@@ -696,6 +747,7 @@ function rehydrateState(){
   modalDone  = load('vb2', []);
   qDoneFaces = load('qf2', {});
   medDoneTerms = load('mdt2', {});
+  galleryEntries = load('gal2', []);
 }
 
 function refreshAllViews(){
@@ -706,6 +758,7 @@ function refreshAllViews(){
   renderMilestones();
   renderQuran();
   renderMed();
+  renderGallery();
 }
 
 let toeflDone = load('td2',0);       // lessons done
@@ -1331,6 +1384,139 @@ function medCatchUp(){
 }
 
 // ══════════════════════════════════
+// GALLERY — إنجازاتي (صور تذكارية)
+// ══════════════════════════════════
+let galleryEntries = load('gal2', []); // [{id, date, story, image(base64)}]
+let pendingImageData = null;
+
+function openGalleryUpload(){
+  document.getElementById('galleryUploadForm').style.display = 'block';
+  const today = new Date();
+  const iso = today.toISOString().split('T')[0];
+  document.getElementById('galleryDateInput').value = iso;
+  document.getElementById('galleryStoryInput').value = '';
+  document.getElementById('galleryPreviewImg').style.display = 'none';
+  document.getElementById('galleryPreviewPlaceholder').style.display = 'block';
+  pendingImageData = null;
+}
+
+function closeGalleryUpload(){
+  document.getElementById('galleryUploadForm').style.display = 'none';
+  document.getElementById('galleryFileInput').value = '';
+  pendingImageData = null;
+}
+
+function handleGalleryFileSelect(event){
+  const file = event.target.files[0];
+  if(!file) return;
+
+  const warnEl = document.getElementById('gallerySizeWarning');
+  warnEl.style.display = 'block';
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const img = new Image();
+    img.onload = function(){
+      // compress: max 700px on longest side, JPEG quality 0.7
+      const maxDim = 700;
+      let w = img.width, h = img.height;
+      if(w > h && w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; }
+      else if(h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+
+      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+      pendingImageData = compressedBase64;
+
+      // preview
+      const previewImg = document.getElementById('galleryPreviewImg');
+      previewImg.src = compressedBase64;
+      previewImg.style.display = 'block';
+      document.getElementById('galleryPreviewPlaceholder').style.display = 'none';
+      warnEl.style.display = 'none';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveGalleryEntry(){
+  if(!pendingImageData){
+    alert('اختر صورة أولاً');
+    return;
+  }
+  const date = document.getElementById('galleryDateInput').value;
+  const story = document.getElementById('galleryStoryInput').value.trim();
+  if(!date){
+    alert('حدد تاريخ اللحظة');
+    return;
+  }
+
+  const entry = {
+    id: 'g_' + Date.now(),
+    date: date,
+    story: story || 'لحظة بدون وصف',
+    image: pendingImageData
+  };
+
+  galleryEntries.unshift(entry); // newest first
+  save('gal2', galleryEntries);
+  renderGallery();
+  closeGalleryUpload();
+}
+
+function deleteGalleryEntry(id){
+  if(!confirm('احذف هذي اللحظة؟')) return;
+  galleryEntries = galleryEntries.filter(e => e.id !== id);
+  save('gal2', galleryEntries);
+  renderGallery();
+}
+
+function fmtGalleryDate(isoStr){
+  try{
+    const d = new Date(isoStr + 'T00:00:00');
+    const days=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+    const months=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+    return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  }catch{ return isoStr; }
+}
+
+function renderGallery(){
+  const grid = document.getElementById('galleryGrid');
+  const empty = document.getElementById('galleryEmpty');
+  if(!grid) return;
+
+  if(!galleryEntries || galleryEntries.length === 0){
+    grid.innerHTML = '';
+    if(empty) empty.style.display = 'block';
+    return;
+  }
+  if(empty) empty.style.display = 'none';
+
+  grid.innerHTML = '';
+  galleryEntries.forEach(entry => {
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;position:relative;transition:transform 0.2s;';
+    card.innerHTML = `
+      <div style="position:relative;aspect-ratio:1;overflow:hidden;background:var(--bg3);">
+        <img src="${entry.image}" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy">
+        <div style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);color:#fff;font-size:10px;font-weight:600;padding:4px 10px;border-radius:20px;">
+          ${fmtGalleryDate(entry.date)}
+        </div>
+        <button onclick="deleteGalleryEntry('${entry.id}')" style="position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);border:none;color:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;">✕</button>
+      </div>
+      <div style="padding:12px 14px;">
+        <div style="font-size:12px;color:var(--text);line-height:1.6;">${entry.story.replace(/</g,'&lt;')}</div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// ══════════════════════════════════
 // CATCH-UP: علّم كل الأيام الماضية
 // ══════════════════════════════════
 function catchUpAll(){
@@ -1381,6 +1567,7 @@ function showTabById(id){
   if(btn) btn.classList.add('active');
   if(id==='quran') renderQuran();
   if(id==='med') renderMed();
+  if(id==='gallery') renderGallery();
 }
 
 function showTab(id){
@@ -1390,6 +1577,7 @@ function showTab(id){
   event.target.classList.add('active');
   if(id==='quran') renderQuran();
   if(id==='med') renderMed();
+  if(id==='gallery') renderGallery();
 }
 
 function togglePhase(header){
@@ -1408,6 +1596,7 @@ function initApp(){
   renderMilestones();
   renderQuran();
   renderMed();
+  renderGallery();
 
   // pull any cloud state (from other devices) after first paint
   syncFromCloud();
