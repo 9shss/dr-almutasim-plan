@@ -1547,19 +1547,59 @@ function renderGallery(){
     const card = document.createElement('div');
     card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;position:relative;transition:transform 0.2s;';
     card.innerHTML = `
-      <div style="position:relative;aspect-ratio:1;overflow:hidden;background:var(--bg3);">
+      <div style="position:relative;aspect-ratio:1;overflow:hidden;background:var(--bg3);cursor:pointer;" onclick="openLightbox('${entry.id}')">
         <img src="${entry.image}" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy">
         <div style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);color:#fff;font-size:10px;font-weight:600;padding:4px 10px;border-radius:20px;">
           ${fmtGalleryDate(entry.date)}
         </div>
-        <button onclick="deleteGalleryEntry('${entry.id}')" style="position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);border:none;color:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;">✕</button>
+        <button onclick="event.stopPropagation();deleteGalleryEntry('${entry.id}')" style="position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);border:none;color:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;z-index:2;">✕</button>
       </div>
-      <div style="padding:12px 14px;">
+      <div style="padding:12px 14px;cursor:pointer;" onclick="openLightbox('${entry.id}')">
         <div style="font-size:12px;color:var(--text);line-height:1.6;">${entry.story.replace(/</g,'&lt;')}</div>
       </div>
     `;
     grid.appendChild(card);
   });
+}
+
+// ══════════════════════════════════
+// LIGHTBOX — تكبير الصورة عند الضغط
+// ══════════════════════════════════
+function openLightbox(entryId){
+  const entry = galleryEntries.find(e => e.id === entryId);
+  if(!entry) return;
+
+  let lb = document.getElementById('galleryLightbox');
+  if(!lb){
+    lb = document.createElement('div');
+    lb.id = 'galleryLightbox';
+    lb.style.cssText = 'position:fixed;inset:0;z-index:1000;background:rgba(5,5,8,0.92);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;animation:fadeUp 0.2s ease both;';
+    lb.onclick = closeLightbox;
+    document.body.appendChild(lb);
+  }
+
+  lb.innerHTML = `
+    <div style="max-width:600px;width:100%;max-height:90vh;display:flex;flex-direction:column;align-items:center;gap:14px;" onclick="event.stopPropagation()">
+      <button onclick="closeLightbox()" style="align-self:flex-end;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">✕</button>
+      <img src="${entry.image}" style="max-width:100%;max-height:65vh;border-radius:14px;object-fit:contain;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;width:100%;box-sizing:border-box;">
+        <div style="font-size:11px;color:#e8a87c;font-weight:600;margin-bottom:6px;">${fmtGalleryDate(entry.date)}</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.7;">${entry.story.replace(/</g,'&lt;')}</div>
+      </div>
+    </div>
+  `;
+  lb.style.display = 'flex';
+  document.addEventListener('keydown', lightboxEscHandler);
+}
+
+function closeLightbox(){
+  const lb = document.getElementById('galleryLightbox');
+  if(lb) lb.style.display = 'none';
+  document.removeEventListener('keydown', lightboxEscHandler);
+}
+
+function lightboxEscHandler(e){
+  if(e.key === 'Escape') closeLightbox();
 }
 
 // ══════════════════════════════════
