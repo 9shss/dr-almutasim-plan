@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>مخطط الدكتور — خطة الاختبارات</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Firebase SDK (compat version — works without a bundler) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 <style>
 :root {
   --bg:#0a0a0f; --bg2:#12121a; --bg3:#1a1a26; --bg4:#20202e;
@@ -612,13 +615,23 @@ const MILESTONES_DATA = [
 ];
 
 // ══════════════════════════════════
-// STORAGE
-// ══════════════════════════════════
-// ══════════════════════════════════
-// STORAGE — local-first + cloud sync
+// STORAGE — local-first + Firebase cloud sync
 // ══════════════════════════════════
 const SYNC_KEYS = ['td2','ql2','vb2','todo2','qf2','mdt2'];
 let cloudReady = false;
+
+// ---- Firebase init ----
+const firebaseConfig = {
+  apiKey: "AIzaSyB_GDB779fQ6pLIUM-yHdQSLT-VvPcjXu4",
+  authDomain: "dr-m-918ad.firebaseapp.com",
+  databaseURL: "https://dr-m-918ad-default-rtdb.firebaseio.com",
+  projectId: "dr-m-918ad",
+  storageBucket: "dr-m-918ad.firebasestorage.app",
+  messagingSenderId: "916759725023",
+  appId: "1:916759725023:web:78d0b67a67ed7046c5fa6a"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
 function load(k,def){try{const v=localStorage.getItem(k);return v!==null?JSON.parse(v):def;}catch{return def;}}
 
@@ -630,21 +643,19 @@ function save(k,v){
 
 async function cloudSave(key, value){
   try{
-    if(!window.storage) return;
-    await window.storage.set('drplan_'+key, JSON.stringify(value), false);
+    await db.ref('drplan/' + key).set(value);
   }catch(e){ console.warn('cloud save failed for', key, e); }
 }
 
 async function cloudLoad(key){
   try{
-    if(!window.storage) return null;
-    const res = await window.storage.get('drplan_'+key, false);
-    return res ? JSON.parse(res.value) : null;
-  }catch(e){ return null; } // key doesn't exist yet — normal on first run
+    const snap = await db.ref('drplan/' + key).once('value');
+    const val = snap.val();
+    return val !== null && val !== undefined ? val : null;
+  }catch(e){ return null; }
 }
 
-// On startup: pull cloud data (if it exists and is newer/non-empty) into localStorage,
-// then re-render everything so other devices see the same state.
+// On startup: pull cloud data into localStorage, then re-render so every device matches.
 async function syncFromCloud(){
   let foundAny = false;
   for(const key of SYNC_KEYS){
@@ -656,13 +667,27 @@ async function syncFromCloud(){
   }
   cloudReady = true;
   if(foundAny){
-    // reload in-memory state from the now-updated localStorage, then re-render
     rehydrateState();
     refreshAllViews();
   } else {
-    // no cloud data yet — this is first run, push current local state up
+    // no cloud data yet — first run, push current local state up
     SYNC_KEYS.forEach(k => cloudSave(k, load(k, null)));
   }
+
+  // live sync: if another device updates a key, reflect it here automatically
+  SYNC_KEYS.forEach(key => {
+    db.ref('drplan/' + key).on('value', snap => {
+      const val = snap.val();
+      if(val === null || val === undefined) return;
+      const current = JSON.stringify(load(key, null));
+      const incoming = JSON.stringify(val);
+      if(current !== incoming){
+        localStorage.setItem(key, JSON.stringify(val));
+        rehydrateState();
+        refreshAllViews();
+      }
+    });
+  });
 }
 
 function rehydrateState(){
