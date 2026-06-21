@@ -217,7 +217,7 @@ h1{font-size:34px;font-weight:700;line-height:1.2;margin-bottom:6px;background:l
 <div class="overall-grid">
   <div class="prog-card toefl">
     <div class="prog-label">TOEFL — دروس</div>
-    <div class="prog-count" id="toeflCount">0 <span>/ 1156</span></div>
+    <div class="prog-count" id="toeflCount">0 <span>/ 1556</span></div>
     <div class="prog-bar"><div class="prog-fill" id="toeflBar" style="width:0%"></div></div>
     <div class="prog-pct" id="toeflPct">٠٪ مكتمل</div>
   </div>
@@ -812,9 +812,9 @@ function updateQuote(){
 // ══════════════════════════════════
 function updateProgress(){
   // TOEFL
-  const td=Math.min(toeflDone,1156);
-  document.getElementById('toeflCount').innerHTML=`${toAr(td)} <span>/ ${toAr(1156)}</span>`;
-  const tp=Math.round(td/1156*100);
+  const td=Math.min(toeflDone,1556);
+  document.getElementById('toeflCount').innerHTML=`${toAr(td)} <span>/ ${toAr(1556)}</span>`;
+  const tp=Math.round(td/1556*100);
   document.getElementById('toeflBar').style.width=tp+'%';
   document.getElementById('toeflPct').textContent=toAr(tp)+'٪ مكتمل';
 
@@ -1146,7 +1146,7 @@ function tGetDayLessons(dayOffset){
   const start = dayOffset * 13;
   const end   = start + 13;
   const lessons = [];
-  for(let i = start; i < end && i < 1156; i++) lessons.push(i);
+  for(let i = start; i < end && i < 1556; i++) lessons.push(i);
   return lessons;
 }
 
