@@ -816,6 +816,7 @@ function rehydrateState(){
   galleryEntries = load('gal2', []);
   tDoneLessons = load('tdl2', {});
   repData = load('rep2', { lists: [] });
+  if(!repData || typeof repData !== 'object' || !Array.isArray(repData.lists)) repData = { lists: [] };
 }
 
 function refreshAllViews(){
@@ -1842,6 +1843,7 @@ function qCatchUp(){
 
 const REP_INTERVALS = [1, 3, 7, 14, 30, 60]; // days after previous review
 let repData = load('rep2', { lists: [] });
+if(!repData || typeof repData !== 'object' || !Array.isArray(repData.lists)) repData = { lists: [] };
 
 // ── Helpers ──
 function repAddDays(isoStr, n){
@@ -2037,6 +2039,19 @@ function repDeleteItem(listId, sublistId, itemId){
 
 // ── Render ──
 function renderRep(){
+  // defensive: ensure repData and nested structure are always valid
+  if(!repData || typeof repData !== 'object') repData = { lists: [] };
+  if(!Array.isArray(repData.lists)) repData.lists = [];
+  repData.lists.forEach(lst => {
+    if(!Array.isArray(lst.sublists)) lst.sublists = [];
+    lst.sublists.forEach(sub => {
+      if(!Array.isArray(sub.items)) sub.items = [];
+      sub.items.forEach(item => {
+        if(!Array.isArray(item.reviews)) item.reviews = [];
+      });
+    });
+  });
+
   const today = repTodayISO();
 
   // collect all due items
