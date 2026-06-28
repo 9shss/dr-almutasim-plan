@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>مخطط صناعةالحلم — استشاري جراحة المخ والأعصاب</title>
+<title>مخطط الدكتور — خطة الاختبارات</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <!-- Firebase SDK (compat version — works without a bundler) -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
@@ -199,9 +199,9 @@ h1{font-size:34px;font-weight:700;line-height:1.2;margin-bottom:6px;background:l
 
 <!-- Header -->
 <div class="header">
-  <div class="header-label">مخطط استشاري جراحة المخ والأعصاب د. المعتصم علوش</div>
-  <h1> مخطط صناعة الحلم </h1>
-  <div class="header-sub"> هو مخطط لأصل لحلمي مستعينًا بالله</div>
+  <div class="header-label">مخطط الدكتور</div>
+  <h1>خطة الاختبارات الكاملة</h1>
+  <div class="header-sub">TOEFL · القدرات (لفظي + كمي) — تبدأ ١٩ يونيو ٢٠٢٦</div>
 </div>
 
 <!-- Quote bar -->
@@ -251,6 +251,7 @@ h1{font-size:34px;font-weight:700;line-height:1.2;margin-bottom:6px;background:l
   <button class="tab-btn" onclick="showTab('quran')">📖 القرآن</button>
   <button class="tab-btn" onclick="showTab('med')">🏥 Medical Terms</button>
   <button class="tab-btn" onclick="showTab('gallery')">📸 إنجازاتي</button>
+  <button class="tab-btn" onclick="showTab('rep')">🔁 التكرار</button>
   <button class="tab-btn" onclick="showTab('milestones')">🏁 المعالم</button>
 </div>
 
@@ -594,6 +595,57 @@ h1{font-size:34px;font-weight:700;line-height:1.2;margin-bottom:6px;background:l
 
 </div>
 
+<!-- TAB: REPETITION (التكرار المتباعد) -->
+<div class="tab-content" id="tab-rep">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+    <div>
+      <div style="font-size:11px;color:#a78bfa;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;margin-bottom:4px;">Spaced Repetition</div>
+      <div style="font-size:22px;font-weight:700;">التكرار المتباعد</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px;">٦ مراجعات · ١ · ٣ · ٧ · ١٤ · ٣٠ · ٦٠ يوم</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <div style="text-align:center;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.2);border-radius:12px;padding:12px 18px;">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">مراجعات اليوم</div>
+        <div style="font-size:24px;font-weight:700;color:#a78bfa;" id="repTodayCount">٠</div>
+      </div>
+      <div style="text-align:center;background:var(--green-dim);border:1px solid rgba(74,222,128,0.2);border-radius:12px;padding:12px 18px;">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">مثبت</div>
+        <div style="font-size:24px;font-weight:700;color:var(--green);" id="repMasteredCount">٠</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Today's due reviews -->
+  <div id="repTodaySection" style="margin-bottom:24px;display:none;">
+    <div style="font-size:11px;font-weight:600;color:#a78bfa;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;">📅 مراجعات اليوم</div>
+    <div id="repTodayList" style="display:flex;flex-direction:column;gap:7px;"></div>
+  </div>
+
+  <!-- All lists -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+    <div style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;">القوائم</div>
+    <button onclick="openRepModal('list',null,null)" style="background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.3);color:#a78bfa;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;">+ قائمة جديدة</button>
+  </div>
+
+  <div id="repListsContainer" style="display:flex;flex-direction:column;gap:12px;"></div>
+  <div id="repEmpty" style="text-align:center;padding:50px 20px;color:var(--muted);font-size:13px;">لا توجد قوائم بعد — اضغط "+ قائمة جديدة" لتبدأ</div>
+
+</div>
+
+<!-- Modal for adding list/sublist/item -->
+<div id="repModal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(5,5,8,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:24px;">
+  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:24px;max-width:420px;width:100%;" onclick="event.stopPropagation()">
+    <div style="font-size:16px;font-weight:700;margin-bottom:18px;" id="repModalTitle">إضافة قائمة</div>
+    <div id="repModalBody" style="display:flex;flex-direction:column;gap:12px;"></div>
+    <div style="display:flex;gap:8px;margin-top:18px;">
+      <button id="repModalSave" onclick="saveRepModal()" style="flex:1;background:rgba(167,139,250,0.18);border:1px solid rgba(167,139,250,0.35);color:#a78bfa;padding:11px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;">حفظ</button>
+      <button onclick="closeRepModal()" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--muted);padding:11px;border-radius:9px;cursor:pointer;font-size:13px;font-family:inherit;">إلغاء</button>
+    </div>
+  </div>
+</div>
+
 <!-- TAB: MILESTONES -->
 <div class="tab-content" id="tab-milestones">
   <div class="section-title">المعالم الزمنية</div>
@@ -606,7 +658,7 @@ h1{font-size:34px;font-weight:700;line-height:1.2;margin-bottom:6px;background:l
 // ══════════════════════════════════
 // LOCK SCREEN — simple password gate
 // ══════════════════════════════════
-const APP_PASSWORD = 'Op875421'; // غيّرها لكلمة مرور من اختيارك
+const APP_PASSWORD = '121212'; // غيّرها لكلمة مرور من اختيارك
 
 function tryUnlock(){
   const val = document.getElementById('lockInput').value;
@@ -682,7 +734,7 @@ const MILESTONES_DATA = [
 // ══════════════════════════════════
 // STORAGE — local-first + Firebase cloud sync
 // ══════════════════════════════════
-const SYNC_KEYS = ['td2','ql2','vb2','todo2','qf2','mdt2','gal2','tdl2'];
+const SYNC_KEYS = ['td2','ql2','vb2','todo2','qf2','mdt2','gal2','tdl2','rep2'];
 let cloudReady = false;
 
 // ---- Firebase init ----
@@ -763,6 +815,7 @@ function rehydrateState(){
   medDoneTerms = load('mdt2', {});
   galleryEntries = load('gal2', []);
   tDoneLessons = load('tdl2', {});
+  repData = load('rep2', { lists: [] });
 }
 
 function refreshAllViews(){
@@ -775,6 +828,7 @@ function refreshAllViews(){
   renderMed();
   renderGallery();
   renderTLessons();
+  renderRep();
 }
 
 let toeflDone = load('td2',0);       // lessons done
@@ -1750,6 +1804,390 @@ function qCatchUp(){
 }
 
 // ══════════════════════════════════
+// SPACED REPETITION — التكرار المتباعد
+// ══════════════════════════════════
+/*
+  Data structure (stored in 'rep2' key in Firebase + localStorage):
+  {
+    lists: [
+      {
+        id: 'l_xxx',
+        name: 'TOEFL',
+        sublists: [
+          {
+            id: 's_xxx',
+            name: 'Vocab',
+            items: [
+              {
+                id: 'i_xxx',
+                name: 'Unit 1',
+                note: 'اختياري',
+                studyDate: '2026-06-19',   // ISO date string
+                reviews: [                  // auto-generated, 6 entries
+                  { due: '2026-06-20', done: false },  // +1 day
+                  { due: '2026-06-23', done: false },  // +3 days
+                  { due: '2026-06-30', done: false },  // +7 days
+                  { due: '2026-07-14', done: false },  // +14 days
+                  { due: '2026-08-13', done: false },  // +30 days
+                  { due: '2026-10-12', done: false },  // +60 days
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+*/
+
+const REP_INTERVALS = [1, 3, 7, 14, 30, 60]; // days after previous review
+let repData = load('rep2', { lists: [] });
+
+// ── Helpers ──
+function repAddDays(isoStr, n){
+  const d = new Date(isoStr + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return d.toISOString().split('T')[0];
+}
+
+function repGenReviews(studyDate){
+  const reviews = [];
+  let prev = studyDate;
+  REP_INTERVALS.forEach(interval => {
+    const due = repAddDays(prev, interval);
+    reviews.push({ due, done: false });
+    prev = due;
+  });
+  return reviews;
+}
+
+function repTodayISO(){
+  return new Date().toISOString().split('T')[0];
+}
+
+function repIsDue(item){
+  // next undone review that is due today or overdue
+  return item.reviews.some(r => !r.done && r.due <= repTodayISO());
+}
+
+function repNextDue(item){
+  const r = item.reviews.find(r => !r.done);
+  return r ? r.due : null;
+}
+
+function repReviewNum(item){
+  return item.reviews.filter(r => r.done).length + 1; // next review number (1-6)
+}
+
+function repIsMastered(item){
+  return item.reviews.every(r => r.done);
+}
+
+function repSave(){
+  save('rep2', repData);
+}
+
+// ── Modal state ──
+let repModalMode = null; // 'list' | 'sublist' | 'item' | 'edit-item'
+let repModalContext = null; // {listId, sublistId, itemId}
+
+function openRepModal(mode, listId, sublistId, itemId){
+  repModalMode = mode;
+  repModalContext = { listId, sublistId, itemId };
+  const modal = document.getElementById('repModal');
+  const title = document.getElementById('repModalTitle');
+  const body  = document.getElementById('repModalBody');
+  modal.style.display = 'flex';
+
+  if(mode === 'list'){
+    title.textContent = 'إضافة قائمة رئيسية';
+    body.innerHTML = `
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">اسم القائمة</div>
+        <input id="repInput1" placeholder="مثال: TOEFL، قدرات..." style="${repInputStyle()}">
+      </div>
+    `;
+    setTimeout(()=>document.getElementById('repInput1')?.focus(),100);
+
+  } else if(mode === 'sublist'){
+    title.textContent = 'إضافة قائمة فرعية';
+    body.innerHTML = `
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">اسم القائمة الفرعية</div>
+        <input id="repInput1" placeholder="مثال: Vocab، Grammar..." style="${repInputStyle()}">
+      </div>
+    `;
+    setTimeout(()=>document.getElementById('repInput1')?.focus(),100);
+
+  } else if(mode === 'item'){
+    title.textContent = 'إضافة عنصر مراجعة';
+    body.innerHTML = `
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">اسم الدرس</div>
+        <input id="repInput1" placeholder="مثال: Unit 1 Vocabulary" style="${repInputStyle()}">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">ملاحظة (اختياري)</div>
+        <input id="repInput2" placeholder="أي ملاحظة..." style="${repInputStyle()}">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">تاريخ أول دراسة</div>
+        <input type="date" id="repInput3" value="${repTodayISO()}" style="${repInputStyle()}">
+      </div>
+    `;
+    setTimeout(()=>document.getElementById('repInput1')?.focus(),100);
+
+  } else if(mode === 'edit-item'){
+    title.textContent = 'تعديل العنصر';
+    const item = repFindItem(listId, sublistId, itemId);
+    if(!item) return closeRepModal();
+    body.innerHTML = `
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">اسم الدرس</div>
+        <input id="repInput1" value="${item.name}" style="${repInputStyle()}">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">ملاحظة</div>
+        <input id="repInput2" value="${item.note||''}" style="${repInputStyle()}">
+      </div>
+    `;
+    setTimeout(()=>document.getElementById('repInput1')?.focus(),100);
+  }
+}
+
+function repInputStyle(){
+  return 'width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:inherit;font-size:13px;box-sizing:border-box;outline:none;';
+}
+
+function closeRepModal(){
+  document.getElementById('repModal').style.display = 'none';
+  repModalMode = null;
+  repModalContext = null;
+}
+
+function saveRepModal(){
+  const v1 = document.getElementById('repInput1')?.value?.trim();
+  const v2 = document.getElementById('repInput2')?.value?.trim() || '';
+  const v3 = document.getElementById('repInput3')?.value || repTodayISO();
+
+  if(!v1){ document.getElementById('repInput1')?.focus(); return; }
+
+  const uid = () => '_' + Math.random().toString(36).slice(2,9);
+
+  if(repModalMode === 'list'){
+    repData.lists.push({ id:'l'+uid(), name:v1, sublists:[] });
+
+  } else if(repModalMode === 'sublist'){
+    const lst = repData.lists.find(l=>l.id===repModalContext.listId);
+    if(lst) lst.sublists.push({ id:'s'+uid(), name:v1, items:[] });
+
+  } else if(repModalMode === 'item'){
+    const lst = repData.lists.find(l=>l.id===repModalContext.listId);
+    const sub = lst?.sublists.find(s=>s.id===repModalContext.sublistId);
+    if(sub) sub.items.push({
+      id:'i'+uid(), name:v1, note:v2,
+      studyDate:v3, reviews:repGenReviews(v3)
+    });
+
+  } else if(repModalMode === 'edit-item'){
+    const item = repFindItem(repModalContext.listId, repModalContext.sublistId, repModalContext.itemId);
+    if(item){ item.name = v1; item.note = v2; }
+  }
+
+  repSave();
+  closeRepModal();
+  renderRep();
+}
+
+function repFindItem(listId, sublistId, itemId){
+  const lst = repData.lists.find(l=>l.id===listId);
+  const sub = lst?.sublists.find(s=>s.id===sublistId);
+  return sub?.items.find(i=>i.id===itemId) || null;
+}
+
+// ── Mark review done ──
+function repMarkDone(listId, sublistId, itemId){
+  const item = repFindItem(listId, sublistId, itemId);
+  if(!item) return;
+  const r = item.reviews.find(r => !r.done && r.due <= repTodayISO());
+  if(r){ r.done = true; repSave(); renderRep(); }
+}
+
+// ── Delete functions ──
+function repDeleteList(listId){
+  if(!confirm('حذف القائمة وكل محتواها؟')) return;
+  repData.lists = repData.lists.filter(l=>l.id!==listId);
+  repSave(); renderRep();
+}
+
+function repDeleteSublist(listId, sublistId){
+  if(!confirm('حذف القائمة الفرعية وكل محتواها؟')) return;
+  const lst = repData.lists.find(l=>l.id===listId);
+  if(lst) lst.sublists = lst.sublists.filter(s=>s.id!==sublistId);
+  repSave(); renderRep();
+}
+
+function repDeleteItem(listId, sublistId, itemId){
+  if(!confirm('حذف هذا العنصر؟')) return;
+  const lst = repData.lists.find(l=>l.id===listId);
+  const sub = lst?.sublists.find(s=>s.id===sublistId);
+  if(sub) sub.items = sub.items.filter(i=>i.id!==itemId);
+  repSave(); renderRep();
+}
+
+// ── Render ──
+function renderRep(){
+  const today = repTodayISO();
+
+  // collect all due items
+  const dueItems = [];
+  let masteredCount = 0;
+  repData.lists.forEach(lst=>{
+    lst.sublists.forEach(sub=>{
+      sub.items.forEach(item=>{
+        if(repIsMastered(item)) masteredCount++;
+        else if(repIsDue(item)) dueItems.push({lst, sub, item});
+      });
+    });
+  });
+
+  // update header counts
+  const todayCountEl = document.getElementById('repTodayCount');
+  if(todayCountEl) todayCountEl.textContent = toAr(dueItems.length);
+  const masteredEl = document.getElementById('repMasteredCount');
+  if(masteredEl) masteredEl.textContent = toAr(masteredCount);
+
+  // render today's due section
+  const todaySec = document.getElementById('repTodaySection');
+  const todayList = document.getElementById('repTodayList');
+  if(todaySec && todayList){
+    if(dueItems.length > 0){
+      todaySec.style.display = 'block';
+      todayList.innerHTML = '';
+      dueItems.forEach(({lst, sub, item}) => {
+        const reviewNum = repReviewNum(item);
+        const row = document.createElement('div');
+        row.style.cssText = 'display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:11px 14px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.25);border-radius:10px;';
+        row.innerHTML = `
+          <div>
+            <div style="font-size:13px;font-weight:600;">${item.name}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px;">${lst.name} / ${sub.name} · مراجعة ${toAr(reviewNum)} من ٦</div>
+          </div>
+          <button onclick="repMarkDone('${lst.id}','${sub.id}','${item.id}')" style="background:rgba(167,139,250,0.2);border:1px solid rgba(167,139,250,0.3);color:#a78bfa;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;white-space:nowrap;">✓ تم</button>
+        `;
+        todayList.appendChild(row);
+      });
+    } else {
+      todaySec.style.display = 'none';
+    }
+  }
+
+  // render lists
+  const container = document.getElementById('repListsContainer');
+  const empty = document.getElementById('repEmpty');
+  if(!container) return;
+  container.innerHTML = '';
+
+  if(repData.lists.length === 0){
+    if(empty) empty.style.display = 'block';
+    return;
+  }
+  if(empty) empty.style.display = 'none';
+
+  repData.lists.forEach(lst => {
+    const listEl = document.createElement('div');
+    listEl.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;';
+
+    // list header
+    const lh = document.createElement('div');
+    lh.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);cursor:pointer;';
+    lh.innerHTML = `
+      <div style="font-size:14px;font-weight:700;">${lst.name}</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onclick="event.stopPropagation();openRepModal('sublist','${lst.id}',null)" style="background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.25);color:#a78bfa;padding:5px 12px;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;">+ فرعية</button>
+        <button onclick="event.stopPropagation();repDeleteList('${lst.id}')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:4px;">✕</button>
+      </div>
+    `;
+    lh.onclick = () => lh.nextElementSibling.style.display = lh.nextElementSibling.style.display==='none'?'block':'none';
+    listEl.appendChild(lh);
+
+    // sublists container
+    const subsCont = document.createElement('div');
+    subsCont.style.padding = '12px 14px';
+
+    lst.sublists.forEach(sub => {
+      const subEl = document.createElement('div');
+      subEl.style.cssText = 'background:var(--bg3);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden;';
+
+      // sublist header
+      const sh = document.createElement('div');
+      sh.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);';
+      sh.innerHTML = `
+        <div style="font-size:13px;font-weight:600;color:var(--muted);">${sub.name}</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button onclick="openRepModal('item','${lst.id}','${sub.id}',null)" style="background:var(--teal-dim);border:1px solid rgba(0,212,170,0.25);color:var(--teal);padding:4px 11px;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;">+ عنصر</button>
+          <button onclick="repDeleteSublist('${lst.id}','${sub.id}')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:3px;">✕</button>
+        </div>
+      `;
+      subEl.appendChild(sh);
+
+      // items
+      const itemsCont = document.createElement('div');
+      itemsCont.style.padding = '8px 12px';
+
+      if(sub.items.length === 0){
+        itemsCont.innerHTML = '<div style="font-size:11px;color:var(--muted2);padding:8px;text-align:center;">لا توجد عناصر — اضغط "+ عنصر"</div>';
+      } else {
+        sub.items.forEach(item => {
+          const mastered = repIsMastered(item);
+          const due = repIsDue(item);
+          const nextDue = repNextDue(item);
+          const reviewNum = repReviewNum(item);
+          const doneDot = item.reviews.map(r =>
+            `<div style="width:8px;height:8px;border-radius:50%;background:${r.done?'var(--teal)':'var(--border)'};flex-shrink:0;" title="${r.due}"></div>`
+          ).join('');
+
+          const itemEl = document.createElement('div');
+          itemEl.style.cssText = `display:grid;grid-template-columns:1fr auto;align-items:start;gap:10px;padding:10px 8px;border-bottom:1px solid var(--border);`;
+          itemEl.innerHTML = `
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span style="font-size:13px;font-weight:600;">${item.name}</span>
+                ${mastered
+                  ? '<span style="font-size:10px;background:var(--green-dim);color:var(--green);padding:2px 8px;border-radius:10px;font-weight:600;">✅ مثبت</span>'
+                  : due
+                    ? `<span style="font-size:10px;background:rgba(167,139,250,0.15);color:#a78bfa;padding:2px 8px;border-radius:10px;font-weight:600;">مراجعة ${toAr(reviewNum)} — اليوم</span>`
+                    : `<span style="font-size:10px;color:var(--muted);padding:2px 6px;">${nextDue ? 'التالية: '+fmtGalleryDate(nextDue) : ''}</span>`
+                }
+              </div>
+              ${item.note ? `<div style="font-size:11px;color:var(--muted);margin-top:3px;">${item.note}</div>` : ''}
+              <div style="font-size:10px;color:var(--muted2);margin-top:2px;">بدأ: ${fmtGalleryDate(item.studyDate)}</div>
+              <div style="display:flex;gap:4px;align-items:center;margin-top:6px;">${doneDot}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;">
+              ${!mastered && due ? `<button onclick="repMarkDone('${lst.id}','${sub.id}','${item.id}')" style="background:rgba(167,139,250,0.18);border:1px solid rgba(167,139,250,0.3);color:#a78bfa;padding:5px 11px;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;white-space:nowrap;">✓ تم</button>` : ''}
+              <button onclick="openRepModal('edit-item','${lst.id}','${sub.id}','${item.id}')" style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 9px;border-radius:7px;cursor:pointer;font-size:11px;font-family:inherit;">تعديل</button>
+              <button onclick="repDeleteItem('${lst.id}','${sub.id}','${item.id}')" style="background:transparent;border:none;color:var(--muted2);cursor:pointer;font-size:12px;">✕</button>
+            </div>
+          `;
+          itemsCont.appendChild(itemEl);
+        });
+      }
+
+      subEl.appendChild(itemsCont);
+      subsCont.appendChild(subEl);
+    });
+
+    if(lst.sublists.length === 0){
+      subsCont.innerHTML = '<div style="font-size:11px;color:var(--muted2);padding:10px;text-align:center;">لا توجد قوائم فرعية — اضغط "+ فرعية" أعلاه</div>';
+    }
+
+    listEl.appendChild(subsCont);
+    container.appendChild(listEl);
+  });
+}
+
+// ══════════════════════════════════
 // TABS
 // ══════════════════════════════════
 function showTabById(id){
@@ -1762,6 +2200,7 @@ function showTabById(id){
   if(id==='quran') renderQuran();
   if(id==='med') renderMed();
   if(id==='gallery') renderGallery();
+  if(id==='rep') renderRep();
 }
 
 function showTab(id){
@@ -1773,6 +2212,7 @@ function showTab(id){
   if(id==='quran') renderQuran();
   if(id==='med') renderMed();
   if(id==='gallery') renderGallery();
+  if(id==='rep') renderRep();
 }
 
 function togglePhase(header){
@@ -1793,6 +2233,7 @@ function initApp(){
   renderMed();
   renderGallery();
   renderTLessons();
+  renderRep();
 
   // pull any cloud state (from other devices) after first paint
   syncFromCloud();
