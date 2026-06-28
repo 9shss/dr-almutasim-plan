@@ -635,7 +635,7 @@ h1{font-size:34px;font-weight:700;line-height:1.2;margin-bottom:6px;background:l
 </div>
 
 <!-- Modal for adding list/sublist/item -->
-<div id="repModal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(5,5,8,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:24px;">
+<div id="repModal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(5,5,8,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:24px;" onclick="closeRepModal()">
   <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:24px;max-width:420px;width:100%;" onclick="event.stopPropagation()">
     <div style="font-size:16px;font-weight:700;margin-bottom:18px;" id="repModalTitle">إضافة قائمة</div>
     <div id="repModalBody" style="display:flex;flex-direction:column;gap:12px;"></div>
@@ -1961,16 +1961,23 @@ function repInputStyle(){
 
 function closeRepModal(){
   document.getElementById('repModal').style.display = 'none';
+  document.getElementById('repModalBody').innerHTML = '';
   repModalMode = null;
   repModalContext = null;
 }
 
 function saveRepModal(){
-  const v1 = document.getElementById('repInput1')?.value?.trim();
-  const v2 = document.getElementById('repInput2')?.value?.trim() || '';
-  const v3 = document.getElementById('repInput3')?.value || repTodayISO();
+  if(!repModalMode){ console.warn('repModalMode is null'); return; }
 
-  if(!v1){ document.getElementById('repInput1')?.focus(); return; }
+  const input1 = document.querySelector('#repModal #repInput1');
+  const input2 = document.querySelector('#repModal #repInput2');
+  const input3 = document.querySelector('#repModal #repInput3');
+
+  const v1 = input1?.value?.trim() || '';
+  const v2 = input2?.value?.trim() || '';
+  const v3 = input3?.value || repTodayISO();
+
+  if(!v1){ input1?.focus(); return; }
 
   const uid = () => '_' + Math.random().toString(36).slice(2,9);
 
