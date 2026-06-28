@@ -635,13 +635,13 @@ h1{font-size:34px;font-weight:700;line-height:1.2;margin-bottom:6px;background:l
 </div>
 
 <!-- Modal for adding list/sublist/item -->
-<div id="repModal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(5,5,8,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:24px;" onclick="closeRepModal()">
-  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:24px;max-width:420px;width:100%;" onclick="event.stopPropagation()">
-    <div style="font-size:16px;font-weight:700;margin-bottom:18px;" id="repModalTitle">إضافة قائمة</div>
+<div id="repModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(5,5,8,0.92);align-items:center;justify-content:center;padding:24px;">
+  <div id="repModalInner" style="background:#1a1a26;border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:24px;max-width:420px;width:100%;position:relative;">
+    <div style="font-size:16px;font-weight:700;margin-bottom:18px;color:#e8e6f0;" id="repModalTitle">—</div>
     <div id="repModalBody" style="display:flex;flex-direction:column;gap:12px;"></div>
     <div style="display:flex;gap:8px;margin-top:18px;">
-      <button id="repModalSave" onclick="saveRepModal()" style="flex:1;background:rgba(167,139,250,0.18);border:1px solid rgba(167,139,250,0.35);color:#a78bfa;padding:11px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;">حفظ</button>
-      <button onclick="closeRepModal()" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--muted);padding:11px;border-radius:9px;cursor:pointer;font-size:13px;font-family:inherit;">إلغاء</button>
+      <button id="repBtnSave" style="flex:1;background:rgba(167,139,250,0.18);border:1px solid rgba(167,139,250,0.35);color:#a78bfa;padding:11px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:600;font-family:'IBM Plex Sans Arabic',sans-serif;">حفظ</button>
+      <button id="repBtnCancel" style="flex:1;background:#12121a;border:1px solid rgba(255,255,255,0.07);color:#7a7890;padding:11px;border-radius:9px;cursor:pointer;font-size:13px;font-family:'IBM Plex Sans Arabic',sans-serif;">إلغاء</button>
     </div>
   </div>
 </div>
@@ -1894,65 +1894,62 @@ let repModalContext = null; // {listId, sublistId, itemId}
 function openRepModal(mode, listId, sublistId, itemId){
   repModalMode = mode;
   repModalContext = { listId, sublistId, itemId };
-  const modal = document.getElementById('repModal');
-  const title = document.getElementById('repModalTitle');
-  const body  = document.getElementById('repModalBody');
-  modal.style.display = 'flex';
+
+  const modal  = document.getElementById('repModal');
+  const title  = document.getElementById('repModalTitle');
+  const body   = document.getElementById('repModalBody');
+  const btnSave   = document.getElementById('repBtnSave');
+  const btnCancel = document.getElementById('repBtnCancel');
+
+  // wire buttons fresh each open (clone removes old listeners)
+  const newSave = btnSave.cloneNode(true);
+  const newCancel = btnCancel.cloneNode(true);
+  btnSave.parentNode.replaceChild(newSave, btnSave);
+  btnCancel.parentNode.replaceChild(newCancel, btnCancel);
+  newSave.addEventListener('click', function(e){ e.stopPropagation(); saveRepModal(); });
+  newCancel.addEventListener('click', function(e){ e.stopPropagation(); closeRepModal(); });
+
+  // backdrop click closes
+  modal.onclick = function(e){
+    if(e.target === modal) closeRepModal();
+  };
+
+  // build body
+  const inputStyle = 'width:100%;background:#12121a;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#e8e6f0;font-family:inherit;font-size:13px;box-sizing:border-box;outline:none;margin-top:4px;';
 
   if(mode === 'list'){
     title.textContent = 'إضافة قائمة رئيسية';
-    body.innerHTML = `
-      <div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">اسم القائمة</div>
-        <input id="repInput1" placeholder="مثال: TOEFL، قدرات..." style="${repInputStyle()}">
-      </div>
-    `;
-    setTimeout(()=>document.getElementById('repInput1')?.focus(),100);
+    body.innerHTML = `<div><label style="font-size:11px;color:#7a7890;">اسم القائمة</label><input id="rI1" placeholder="مثال: TOEFL، قدرات..." style="${inputStyle}"></div>`;
 
   } else if(mode === 'sublist'){
     title.textContent = 'إضافة قائمة فرعية';
-    body.innerHTML = `
-      <div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">اسم القائمة الفرعية</div>
-        <input id="repInput1" placeholder="مثال: Vocab، Grammar..." style="${repInputStyle()}">
-      </div>
-    `;
-    setTimeout(()=>document.getElementById('repInput1')?.focus(),100);
+    body.innerHTML = `<div><label style="font-size:11px;color:#7a7890;">اسم القائمة الفرعية</label><input id="rI1" placeholder="مثال: Vocab، Grammar..." style="${inputStyle}"></div>`;
 
   } else if(mode === 'item'){
     title.textContent = 'إضافة عنصر مراجعة';
     body.innerHTML = `
-      <div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">اسم الدرس</div>
-        <input id="repInput1" placeholder="مثال: Unit 1 Vocabulary" style="${repInputStyle()}">
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">ملاحظة (اختياري)</div>
-        <input id="repInput2" placeholder="أي ملاحظة..." style="${repInputStyle()}">
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">تاريخ أول دراسة</div>
-        <input type="date" id="repInput3" value="${repTodayISO()}" style="${repInputStyle()}">
-      </div>
+      <div><label style="font-size:11px;color:#7a7890;">اسم الدرس</label><input id="rI1" placeholder="مثال: Unit 1 Vocabulary" style="${inputStyle}"></div>
+      <div><label style="font-size:11px;color:#7a7890;">ملاحظة (اختياري)</label><input id="rI2" placeholder="أي ملاحظة..." style="${inputStyle}"></div>
+      <div><label style="font-size:11px;color:#7a7890;">تاريخ أول دراسة</label><input type="date" id="rI3" value="${repTodayISO()}" style="${inputStyle}"></div>
     `;
-    setTimeout(()=>document.getElementById('repInput1')?.focus(),100);
 
   } else if(mode === 'edit-item'){
     title.textContent = 'تعديل العنصر';
     const item = repFindItem(listId, sublistId, itemId);
-    if(!item) return closeRepModal();
+    if(!item){ closeRepModal(); return; }
     body.innerHTML = `
-      <div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">اسم الدرس</div>
-        <input id="repInput1" value="${item.name}" style="${repInputStyle()}">
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">ملاحظة</div>
-        <input id="repInput2" value="${item.note||''}" style="${repInputStyle()}">
-      </div>
+      <div><label style="font-size:11px;color:#7a7890;">اسم الدرس</label><input id="rI1" value="${item.name}" style="${inputStyle}"></div>
+      <div><label style="font-size:11px;color:#7a7890;">ملاحظة</label><input id="rI2" value="${item.note||''}" style="${inputStyle}"></div>
     `;
-    setTimeout(()=>document.getElementById('repInput1')?.focus(),100);
   }
+
+  modal.style.display = 'flex';
+  setTimeout(()=>{
+    const f = document.getElementById('rI1');
+    if(f){ f.focus(); f.addEventListener('keydown', e=>{ if(e.key==='Enter') saveRepModal(); }); }
+    const f2 = document.getElementById('rI2');
+    if(f2) f2.addEventListener('keydown', e=>{ if(e.key==='Enter') saveRepModal(); });
+  }, 80);
 }
 
 function repInputStyle(){
@@ -1967,17 +1964,13 @@ function closeRepModal(){
 }
 
 function saveRepModal(){
-  if(!repModalMode){ console.warn('repModalMode is null'); return; }
+  if(!repModalMode) return;
 
-  const input1 = document.querySelector('#repModal #repInput1');
-  const input2 = document.querySelector('#repModal #repInput2');
-  const input3 = document.querySelector('#repModal #repInput3');
+  const v1 = (document.getElementById('rI1')?.value || '').trim();
+  const v2 = (document.getElementById('rI2')?.value || '').trim();
+  const v3 =  document.getElementById('rI3')?.value || repTodayISO();
 
-  const v1 = input1?.value?.trim() || '';
-  const v2 = input2?.value?.trim() || '';
-  const v3 = input3?.value || repTodayISO();
-
-  if(!v1){ input1?.focus(); return; }
+  if(!v1){ document.getElementById('rI1')?.focus(); return; }
 
   const uid = () => '_' + Math.random().toString(36).slice(2,9);
 
